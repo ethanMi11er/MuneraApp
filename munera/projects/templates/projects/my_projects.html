@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}My Projects - Munera{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item" href="{% url 'my_organizations' %}">Organizations</a>
+      <a class="nav__item nav__item--active" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    
+    <header class="content__header">
+      <div>
+        <h1>My Projects</h1>
+        <p class="subtitle">A list of projects you are involved in.</p>
+      </div>
+
+      {% if can_create_projects %}
+      <a href="{% url 'projects:create-project' %}" class="btn-create">
+        + New Project
+      </a>
+      {% endif %}
+    </header>
+
+    <section class="cards">
+      {% for project in projects_list %}
+        <a href="{% url 'projects:project-detail' project.project_id %}" class="card card-link">
+          <div class="card__title">{{ project.project_name }}</div>
+          <div class="card__body">
+            {% if project.project_desc %}
+              {{ project.project_desc|truncatewords:20 }}
+            {% else %}
+              <span class="text-muted">No description provided.</span>
+            {% endif %}
+          </div>
+        </a>
+      {% empty %}
+        <div class="panel__body empty panel__body--centered">
+          <p>You are not a member of any projects yet.</p>
+          <div class="panel__footer">
+            {% if can_create_projects %}
+            <a href="{% url 'projects:create-project' %}" class="link-brand">
+              Create your first project &rarr;
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </section>
+  </main>
+</div>
+{% endblock %}

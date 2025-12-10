@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Edit Profile - Munera{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item" href="{% url 'my_organizations' %}">Organizations</a>
+      <a class="nav__item" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item nav__item--active" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <header class="content__header">
+      <h1>Edit Your Information</h1>
+      <p class="subtitle">Manage your account details and preferences.</p>
+    </header>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <section class="panel">
+            <div class="panel__header">Profile Picture</div>
+            <div class="panel__body">
+                <div class="form-group">
+                    {% if user.profile_picture %}
+                        <p>Current Picture:</p>
+                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="profile-pic-current">
+                    {% else %}
+                        <p>No profile picture uploaded.</p>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.profile_picture.id_for_label }}">Change Picture:</label>
+                    {{ form.profile_picture }} 
+                    {% if form.profile_picture.errors %}
+                        <div class="form-error-message">{{ form.profile_picture.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        <section class="panel">
+            <div class="panel__header">Your Information</div>
+            <div class="panel__body">
+                <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">First Name:</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="form-error-message">{{ form.first_name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">Last Name:</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="form-error-message">{{ form.last_name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.alias.id_for_label }}">Alias:</label>
+                    {{ form.alias }}
+                    {% if form.alias.errors %}
+                        <div class="form-error-message">{{ form.alias.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">Email:</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="form-error-message">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        <section class="panel">
+            <div class="panel__header">Display Name Preference</div>
+            <div class="panel__body">
+                <div class="form-group">
+                    <label for="{{ form.display_name_preference.id_for_label }}">Show my name as:</label>
+                    {{ form.display_name_preference }}
+                    {% if form.display_name_preference.errors %}
+                        <div class="form-error-message">{{ form.display_name_preference.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        
+        <section class="panel">
+            <div class="panel__header">Site Theme</div>
+            <div class="panel__body">
+                <div class="form-group">
+                    <label for="{{ form.theme.id_for_label }}">Choose your theme:</label>
+                    {{ form.theme }}
+                    {% if form.theme.errors %}
+                        <div class="form-error-message">{{ form.theme.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        <button type="submit" class="btn-primary">Save Changes</button>
+        <a href="{% url 'profile' %}" class="btn-secondary">Cancel</a>
+    </form>
+
+  </main>
+</div>
+{% endblock %}

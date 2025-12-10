@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}Home - Munera{% endblock %}
+
+{% block content %}
+<div class="app-shell app-shell--dashboard">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item nav__item--active" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item" href="{% url 'my_organizations' %}">Organizations</a>
+      <a class="nav__item" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content content--dashboard">
+    <section class="dashboard__hero">
+      <div>
+        <p class="eyebrow">Welcome back</p>
+        <h1>{{ user.display_name }}</h1>
+        <p class="subtitle">Keep an eye on everything you're part of across organizations, projects, and tasks.</p>
+        <div class="hero__meta">
+          <span>{{ organization_count|default:0 }} organizations</span>
+          <span>{{ project_count|default:0 }} projects</span>
+          <span>{{ open_tasks_count|default:0 }} open tasks</span>
+        </div>
+      </div>
+      <div class="hero__actions">
+        <a href="{% url 'create_organization' %}" class="chip-btn">+ New Organization</a>
+        {% if can_create_projects %}
+        <a href="{% url 'projects:create-project' %}" class="chip-btn">+ New Project</a>
+        <a href="{% url 'projects:add_task' %}" class="chip-btn">+ Quick Task</a>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="cards stats-cards">
+      <div class="card stat-card">
+        <div class="card__title">Projects in flight</div>
+        <div class="card__value">{{ project_count|default:0 }}</div>
+        <p class="stat-hint">Across all organizations you belong to.</p>
+      </div>
+      <div class="card stat-card">
+        <div class="card__title">Open tasks</div>
+        <div class="card__value">{{ open_tasks_count|default:0 }}</div>
+        <p class="stat-hint">Everything not marked done.</p>
+      </div>
+      <div class="card stat-card">
+        <div class="card__title">Due today</div>
+        <div class="card__value">{{ due_today_count|default:0 }}</div>
+        <p class="stat-hint">Stay ahead of deadlines.</p>
+      </div>
+    </section>
+
+    <section class="panel-grid">
+      <div class="panel panel--tiles">
+        <div class="panel__header">
+          <div>
+            <div class="panel__kicker">Your network</div>
+            <div class="panel__title">Organizations</div>
+          </div>
+          <a class="ghost-link" href="{% url 'my_organizations' %}">Manage</a>
+        </div>
+        <div class="tile-grid">
+          {% for membership in memberships %}
+            <a class="tile org-tile" href="{% url 'organization_detail' membership.organization.org_id %}">
+              <div class="tile__top">
+                <span class="pill pill--subtle">{{ membership.role }}</span>
+                <span class="pill pill--muted">Code: {{ membership.organization.org_code }}</span>
+              </div>
+              <h3>{{ membership.organization.org_name }}</h3>
+              <p>{{ membership.organization.description|default:"No description yet."|truncatewords:18 }}</p>
+            </a>
+          {% empty %}
+            <div class="panel__body empty">
+              <p>You're not in any organizations yet.</p>
+              <div class="empty-actions">
+                <a href="{% url 'create_organization' %}" class="chip-btn">Create one</a>
+                <a href="{% url 'my_organizations' %}" class="chip-btn">Join with a code</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="panel panel--tiles">
+        <div class="panel__header">
+          <div>
+            <div class="panel__kicker">What you're shipping</div>
+            <div class="panel__title">Active Projects</div>
+          </div>
+          <a class="ghost-link" href="{% url 'projects:my-projects' %}">View all</a>
+        </div>
+        <div class="tile-grid">
+          {% for project in projects|slice:":6" %}
+            <a class="tile project-tile" href="{% url 'projects:project-detail' project.project_id %}">
+              <div class="tile__top">
+                <span class="pill">{{ project.organization.org_name }}</span>
+                <span class="pill pill--accent">{{ project.open_tasks|default:0 }} open</span>
+              </div>
+              <h3>{{ project.project_name }}</h3>
+              <p>{{ project.project_desc|default:"No description yet."|truncatewords:20 }}</p>
+            </a>
+          {% empty %}
+            <div class="panel__body empty">
+              <p>No active projects yet. Spin up your first one!</p>
+              {% if can_create_projects %}
+              <a href="{% url 'projects:create-project' %}" class="chip-btn">Start a project</a>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <div class="panel__kicker">Your queue</div>
+          <div class="panel__title">Open Tasks</div>
+        </div>
+        <a class="ghost-link" href="{% url 'projects:tasks' %}">Open task board</a>
+      </div>
+      <div class="task-list">
+        {% for task in open_tasks %}
+          <a class="task-row" href="{% url 'projects:task-detail' task.task_id %}">
+            <div>
+              <div class="task-name">{{ task.task_name }}</div>
+              <div class="task-meta">{{ task.project.project_name }}</div>
+            </div>
+            <div class="task-meta task-meta--right">
+              <span class="pill pill--status status-{{ task.status|slugify }}">{{ task.status }}</span>
+              <span class="pill pill--subtle">
+                {% if task.due_date %}
+                  Due {{ task.due_date }}
+                {% else %}
+                  No due date
+                {% endif %}
+              </span>
+            </div>
+          </a>
+        {% empty %}
+          <div class="panel__body empty">
+            <p>You're all caught up. Nice.</p>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="panel two-col">
+      <div class="panel__split">
+        <div class="panel__header">
+          <div class="panel__kicker">Next up</div>
+          <div class="panel__title">Upcoming Deadlines</div>
+        </div>
+        <div class="panel__body">
+          {% if upcoming_tasks %}
+            <ul class="timeline">
+              {% for task in upcoming_tasks %}
+                <li class="timeline__item">
+                  <div>
+                    <div class="task-name">{{ task.task_name }}</div>
+                    <div class="task-meta">{{ task.project.project_name }}</div>
+                  </div>
+                  <div class="task-meta task-meta--right">
+                    <span class="pill pill--status status-{{ task.status|slugify }}">{{ task.status }}</span>
+                    <span class="pill pill--accent">
+                      {% if task.due_date %}{{ task.due_date }}{% else %}No date{% endif %}
+                    </span>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="panel__body empty">No upcoming work on the calendar.</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="panel__split focus-card">
+        <div class="panel__header">
+          <div class="panel__kicker">Focus</div>
+          <div class="panel__title">Most urgent task</div>
+        </div>
+        <div class="panel__body">
+          {% if focus_task %}
+            <div class="focus-task">
+              <div>
+                <div class="task-name">{{ focus_task.task_name }}</div>
+                <div class="task-meta">{{ focus_task.project.project_name }}</div>
+              </div>
+              <div class="task-meta task-meta--right">
+                <span class="pill pill--status status-{{ focus_task.status|slugify }}">{{ focus_task.status }}</span>
+                <span class="pill pill--accent">
+                  {% if focus_task.due_date %}Due {{ focus_task.due_date }}{% else %}No date{% endif %}
+                </span>
+              </div>
+              <a href="{% url 'projects:task-detail' focus_task.task_id %}" class="btn-primary btn-small">Open task</a>
+            </div>
+          {% else %}
+            <div class="panel__body empty">Nothing urgent right now. Enjoy the breathing room.</div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}

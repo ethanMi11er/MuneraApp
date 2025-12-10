@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Create Account - Munera{% endblock %}
+
+{% block content %}
+
+<div class="split-screen-container">
+    <div class="left-panel">
+        <h1>Get Started</h1>
+        <p>Already have an account?</p>
+        <a href="{% url 'login' %}" class="btn-outline">Log In</a>
+    </div>
+
+    <div class="right-panel">
+
+        <div class="form-card">
+            <h2>Create Account</h2>
+            <form method="post" id="create-account-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" placeholder="First Name" value="{{ form_data.first_name|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" placeholder="Last Name" value="{{ form_data.last_name|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="alias">Alias (Optional)</label>
+                    <input type="text" id="alias" name="alias" placeholder="Alias" value="{{ form_data.alias|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Username" value="{{ form_data.username|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" placeholder="E-mail" value="{{ form_data.email|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                </div>
+                <div class="form-group">
+                    <label for="password_confirm">Confirm Password</label>
+                    <input type="password" id="password_confirm" name="password_confirm" placeholder="Confirm Password" required>
+                </div>
+                <button type="submit" class="btn-primary">Sign Up</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

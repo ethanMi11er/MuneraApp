@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}{{ organization.org_name }} - Organization{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item nav__item--active" href="{% url 'my_organizations' %}">Organizations</a>
+      <a class="nav__item" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <header class="content__header">
+      <div>
+        <h1>{{ organization.org_name }}</h1>
+        <p class="subtitle">{{ organization.description|default:"No description provided yet." }}</p>
+        <div class="hero__meta">
+          <span>Role: {{ membership.role }}</span>
+          <span>Code: {{ organization.org_code }}</span>
+        </div>
+      </div>
+      <div class="hero__actions">
+        <a href="{% url 'create_organization' %}" class="chip-btn">+ New Org</a>
+        {% if is_org_manager %}
+        <a href="{% url 'projects:create-project' %}" class="chip-btn">+ New Project</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <section class="cards stats-cards">
+      <div class="card stat-card">
+        <div class="card__title">Members</div>
+        <div class="card__value">{{ member_list|length }}</div>
+      </div>
+      <div class="card stat-card">
+        <div class="card__title">Projects</div>
+        <div class="card__value">{{ projects|length }}</div>
+      </div>
+      <div class="card stat-card">
+        <div class="card__title">My tasks here</div>
+        <div class="card__value">{{ my_tasks|length }}</div>
+      </div>
+    </section>
+
+    <section class="panel panel--tiles">
+      <div class="panel__header">
+        <div class="panel__kicker">Projects</div>
+        <div class="panel__title">Work inside {{ organization.org_name }}</div>
+      </div>
+      <div class="tile-grid">
+        {% for project in projects %}
+          <a class="tile project-tile" href="{% url 'projects:project-detail' project.project_id %}">
+            <div class="tile__top">
+              <span class="pill pill--accent">{{ project.open_tasks|default:0 }} open tasks</span>
+            </div>
+            <h3>{{ project.project_name }}</h3>
+            <p>{{ project.project_desc|default:"No description yet."|truncatewords:20 }}</p>
+          </a>
+        {% empty %}
+          <div class="panel__body empty">
+            <p>No projects yet. Start one to organize work.</p>
+            {% if is_org_manager %}
+            <a href="{% url 'projects:create-project' %}" class="chip-btn">Create project</a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="panel two-col">
+      <div class="panel__split">
+        <div class="panel__header">
+          <div class="panel__kicker">People</div>
+          <div class="panel__title">Members</div>
+        </div>
+        <div class="panel__body member-list">
+          {% for membership in member_list %}
+            <div class="member-row">
+              <div>
+                <div class="task-name">{{ membership.user.display_name }}</div>
+                <div class="task-meta">@{{ membership.user.user_name }}</div>
+              </div>
+              <div class="member-actions">
+                <span class="pill pill--subtle">{{ membership.role }}</span>
+                {% if is_org_manager and membership.user != user %}
+                  <form method="post" action="{% url 'update_member_role' organization.org_id membership.user.pk %}" class="inline-form member-role-form">
+                    {% csrf_token %}
+                    <select name="role" class="select-compact">
+                      <option value="Member" {% if membership.role == "Member" %}selected{% endif %}>Member</option>
+                      <option value="Manager" {% if membership.role == "Manager" %}selected{% endif %}>Manager</option>
+                    </select>
+                    <button type="submit" class="chip-btn">Update</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <div class="panel__body empty">No members yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="panel__split">
+        <div class="panel__header">
+          <div class="panel__kicker">Your items</div>
+          <div class="panel__title">Tasks in this org</div>
+        </div>
+        <div class="panel__body task-list">
+          {% for task in my_tasks %}
+            <a class="task-row" href="{% url 'projects:task-detail' task.task_id %}">
+              <div>
+                <div class="task-name">{{ task.task_name }}</div>
+                <div class="task-meta">{{ task.project.project_name }}</div>
+              </div>
+              <div class="task-meta task-meta--right">
+                <span class="pill pill--status status-{{ task.status|slugify }}">{{ task.status }}</span>
+                <span class="pill pill--subtle">
+                  {% if task.due_date %}Due {{ task.due_date }}{% else %}No date{% endif %}
+                </span>
+              </div>
+            </a>
+          {% empty %}
+            <div class="panel__body empty">No tasks assigned to you in this organization.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}

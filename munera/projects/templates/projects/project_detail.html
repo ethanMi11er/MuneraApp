@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.project_name }} - Munera{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item" href="{% url 'my_organizations' %}">Organizations</a>
+      <a class="nav__item nav__item--active" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    
+    <header class="content__header">
+      <div>
+        <h1>{{ project.project_name }}</h1>
+        <p class="subtitle">{{ project.project_desc }}</p>
+      </div>
+      {% if is_manager %}
+      <a href="{% url 'projects:create-task' project.project_id %}" class="btn-create">
+        + New Task
+      </a>
+      {% endif %}
+    </header>
+
+    <h2 class="section-title section-title--spaced">Active Tasks</h2>
+    
+    <section class="cards">
+      {% for task in all_tasks %}
+        <a class="card" href="{% url 'projects:task-detail' task.task_id %}">
+          <div class="card__title">{{ task.task_name }}</div>
+          <div class="card__body">
+            <span class="status-pill">{{ task.status }}</span>
+            <p class="card__text">
+                {{ task.task_desc|truncatewords:10|default:"No description" }}
+            </p>
+          </div>
+        </a>
+      {% empty %}
+        <div class="panel__body empty panel__body--centered">
+          <p>No tasks created yet.</p>
+        </div>
+      {% endfor %}
+    </section>
+
+
+    <div class="section-header">
+        <h2 class="section-title">Team Members</h2>
+        
+        {% if is_manager %}
+        <form method="post" action="{% url 'projects:add-member' project.project_id %}" class="form-inline">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Add user by username..." required 
+                   class="input-inline">
+            <button type="submit" class="btn btn-primary btn-compact">Add</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <section class="cards">
+        {% for member in project_members %}
+        <div class="card">
+            <div class="card__title">
+                {{ member.user.first_name }} {{ member.user.last_name }}
+            </div>
+            <div class="card__body">
+                <p class="card__text">
+                    Role: <strong>{{ member.role }}</strong>
+                </p>
+                <p class="card-meta">
+                    Username: {{ member.user.user_name }}
+                </p>
+
+                {% if is_manager and member.user.pk != user.pk %}
+                    <div class="card-divider">
+                        <form method="post"
+                              action="{% url 'projects:remove-member' project.project_id member.user.pk %}"
+                              onsubmit="return confirm('Are you sure you want to remove this user?');"
+                              class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn-link-danger">
+                                Remove User
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </section>
+
+  </main>
+</div>
+{% endblock %}
