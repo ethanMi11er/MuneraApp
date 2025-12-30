@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}{{ task.task_name }} - Task{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item" href="{% url 'my_organizations' %}">Organizations</a>
+      <a class="nav__item" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item nav__item--active" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="page-header">
+        <h1>{{ task.task_name }}</h1>
+        <p class="subtitle">Project: {{ project.project_name }}</p>
+        <div class="hero__meta">
+          <span>Status: {{ task.status }}</span>
+          <span>Due: {% if task.due_date %}{{ task.due_date }}{% else %}No due date{% endif %}</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel__header flex-between">
+            <span>Task details</span>
+            <div class="panel__actions">
+              <a href="{% url 'projects:project-detail' project.project_id %}" class="btn btn-secondary btn-inline">Back to project</a>
+              <a href="{% url 'projects:tasks' %}" class="btn btn-secondary btn-inline">My tasks</a>
+            </div>
+        </div>
+        <div class="panel__body">
+            <form method="post" class="form">
+                {% csrf_token %}
+
+                <div class="form-grid">
+                    {% for field in form %}
+                        {% if field.is_hidden %}
+                            {{ field }}
+                        {% else %}
+                            <div class="form-row">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <small class="form-help">{{ field.help_text }}</small>
+                                {% endif %}
+                                {{ field.errors }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" {% if not can_edit %}disabled{% endif %}>Save changes</button>
+                    <a href="{% url 'projects:project-detail' project.project_id %}" class="btn btn-secondary">Cancel</a>
+                </div>
+                {% if not can_edit %}
+                    <p class="form-help">Only managers or assigned users can update this task.</p>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

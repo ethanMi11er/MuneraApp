@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tasks - Munera{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item" href="{% url 'my_organizations' %}">Organizations</a>
+      <a class="nav__item" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item nav__item--active" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="page-header">
+        <h1>Tasks</h1>
+        <p class="subtitle">Manage and track tasks across projects.</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel__header">
+            <span>Your Tasks</span>
+            {% if can_create_tasks %}
+            <a href="{% url 'projects:add_task' %}" class="btn btn-primary">+ Add Task</a>
+            {% endif %}
+        </div>
+
+        <div class="panel__body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Project</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.task_name }}</td>
+                        <td>
+                            <a href="{% url 'projects:project-detail' task.project.project_id %}">
+                                {{ task.project.project_name }}
+                            </a>
+                        </td>
+                        <td>{{ task.status }}</td>
+                        <td>{{ task.due_date|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'projects:task-detail' task.task_id %}" class="btn btn-secondary">Open</a>
+                            {% if task.project.project_id in manager_project_ids %}
+                                <form method="post" action="{% url 'projects:delete_task' task.task_id %}" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger-sm" aria-label="Delete task">x</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty">No tasks yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

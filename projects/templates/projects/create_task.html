@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-shell">
+    <h2>Create Task for {{ project.project_name }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        
+        {% for field in form %}
+            {% if field.is_hidden %}
+                {{ field }}
+            {% else %}
+                <div class="form-row">
+                    <label>{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-help">{{ field.help_text }}</small>
+                    {% endif %}
+                    {{ field.errors }}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-inline">Save Task</button>
+            <a href="{% url 'projects:project-detail' project.project_id %}" class="btn btn-secondary btn-inline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

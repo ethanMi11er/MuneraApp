@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{{user.theme|default:'light'}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Munera{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=20251209">
+    {% block head %}{% endblock %}
+    <script src="{% static 'js/main.js' %}?v=20250301" defer></script>
+</head>
+<body>
+
+    <div id="toast-container" aria-live="polite" aria-atomic="true">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast {{ message.tags }}" role="alert">
+                    <div class="toast__content">{{ message }}</div>
+                    <button type="button" class="toast__close" aria-label="Close">&times;</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+</body>
+</html>

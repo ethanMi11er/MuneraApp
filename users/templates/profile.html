@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Your Profile - Munera{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item" href="{% url 'my_organizations' %}">Organizations</a>
+      <a class="nav__item" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item nav__item--active" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <header class="content__header flex-between">
+      <div>
+        <h1>Your Profile</h1>
+        <p class="subtitle">Your personal account details.</p>
+      </div>
+      <a href="{% url 'edit_profile' %}" class="btn btn-primary btn-inline">Edit Profile</a>
+    </header>
+    <div class="profile-header">
+        {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="profile-pic">
+        {% else %}
+            <img src="https://placehold.co/120x120/5d3fd3/FFFFFF?text={{ user.first_name.0|upper }}" alt="Profile Picture" class="profile-pic">
+        {% endif %}
+        <div class="profile-info">
+            <h1>{{ user.display_name }}</h1>
+            <p>@{{ user.user_name }}</p>
+        </div>
+    </div>
+
+    <section class="panel">
+        <div class="panel__header">Account Details</div>
+        <div class="panel__body">
+            <dl class="info-grid">
+                <dt>First Name</dt>
+                <dd>{{ user.first_name }}</dd>
+                
+                <dt>Last Name</dt>
+                <dd>{{ user.last_name }}</dd>
+                
+                <dt>Alias</dt>
+                <dd>{{ user.alias|default:"N/A" }}</dd>
+                
+                <dt>Email</dt>
+                <dd>{{ user.email }}</dd>
+                
+                <dt>Display Name As</dt>
+                <dd>{{ user.display_name }}</dd>
+
+                <dt>Site Theme</dt>
+                <dd>{{ user.get_theme_display }}</dd>
+            </dl>
+        </div>
+    </section>
+    <section class="panel">
+        <div class="panel__header">Security</div>
+        <div class="panel__body flex-between">
+            <span>Manage your account security settings.</span>
+            <a href="{% url 'change_password' %}" class="btn btn-secondary btn-inline">Change Your Password</a>
+        </div>
+    </section>
+
+  </main>
+</div>
+{% endblock %}

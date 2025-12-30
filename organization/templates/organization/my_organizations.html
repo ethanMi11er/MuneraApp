@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}My Organizations - Munera{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item nav__item--active" href="{% url 'my_organizations' %}">My Organizations</a>
+      <a class="nav__item" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <header class="content__header">
+        <h1>My Organizations</h1>
+        <div class="header-actions">
+            <button id="openCreateModal" class="btn btn-primary">Create Organization</button>
+            <button id="openJoinModal" class="btn btn-primary">Join Organization</button>
+        </div>
+    </header>
+
+    {% if memberships %}
+        <div class="organizations-list">
+            {% for membership in memberships %}
+                <div class="organization-card">
+                    <div class="org-info">
+                        <h3>
+                            <a href="{% url 'organization_detail' membership.organization.org_id %}" class="link-plain">
+                                {{ membership.organization.org_name }}
+                            </a>
+                        </h3>
+                        {% if membership.organization.description %}
+                            <p class="org-description">{{ membership.organization.description }}</p>
+                        {% endif %}
+                        <div class="org-meta">
+                            <span class="role-badge role-{{ membership.role|lower }}">
+                                {{ membership.role }}
+                            </span>
+                            <span class="join-date">Joined {{ membership.date_joined|date:"M d, Y" }}</span>
+                            {% if membership.organization.org_creator == user %}
+                                <span class="creator-badge">Creator</span>
+                            {% endif %}
+                            <span class="org-code">Code: {{ membership.organization.org_code }}</span>
+                        </div>
+                    </div>
+                    <div class="org-actions">
+                        <a href="{% url 'organization_detail' membership.organization.org_id %}" class="btn btn-primary btn-inline btn-compact inline-form--spaced">Open</a>
+                        {% if membership.role == 'Manager' %}
+                            <form method="post" action="{% url 'delete_organization' membership.organization.org_id %}" class="delete-form inline-form--block inline-form--spaced">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete {{ membership.organization.org_name }}? This action cannot be undone and will remove all members and data associated with this organization.')">
+                                    Delete Organization
+                                </button>
+                            </form>
+                        {% endif %}
+                        <form method="post" action="{% url 'leave_organization' membership.organization.org_id %}" class="leave-form inline-form--block">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to leave {{ membership.organization.org_name }}?')">
+                                Leave Organization
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No Organizations Yet</h3>
+            <p>You haven't joined any organizations yet. Create your own organization or join an existing one to get started!</p>
+            <div class="empty-state-actions">
+                <button id="openCreateModalEmpty" class="btn btn-primary">Create Organization</button>
+                <button id="openJoinModalEmpty" class="btn btn-primary">Join Organization</button>
+            </div>
+        </div>
+    {% endif %}
+  </main>
+</div>
+
+<!-- Join Organization Modal -->
+<div id="joinModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Join Organization</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Ask your organization administrator for the organization code to join.</p>
+            
+            <form id="joinOrgForm" method="post" action="{% url 'join_organization' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="org_code">Organization Code:</label>
+                    <input 
+                        type="text" 
+                        id="org_code" 
+                        name="org_code" 
+                        required 
+                        placeholder="Enter the organization code"
+                        maxlength="256"
+                    >
+                    <div class="form-help">
+                        This is a unique code provided by the organization administrator.
+                    </div>
+                </div>
+                
+                <div class="modal-info">
+                    <h4>How to Join</h4>
+                    <ol>
+                        <li>Get the organization code from your organization administrator</li>
+                        <li>Enter the code in the form above</li>
+                        <li>Click "Join Organization"</li>
+                        <li>You'll be added as a member and can start collaborating!</li>
+                    </ol>
+                    
+                    <div class="info-note">
+                        <strong>Note:</strong> You'll join as a regular member. Organization administrators can change your role later if needed.
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Join Organization</button>
+                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Create Organization Modal -->
+<div id="createModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create Organization</h2>
+            <span class="close create-close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Create a new organization and invite team members to collaborate.</p>
+            
+            <form id="createOrgForm" method="post" action="{% url 'create_organization' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="org_name">Organization Name *</label>
+                    <input 
+                        type="text" 
+                        id="org_name" 
+                        name="org_name" 
+                        required 
+                        maxlength="30"
+                        placeholder="Enter organization name"
+                    >
+                    <div class="form-help">
+                        Maximum 30 characters. This will be displayed to all members.
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea 
+                        id="description" 
+                        name="description" 
+                        rows="6"
+                        maxlength="500"
+                        placeholder="Describe your organization (optional)"
+                    ></textarea>
+                    <div class="form-help">
+                        Optional. Maximum 500 characters. Helps members understand your organization's purpose.
+                    </div>
+                </div>
+                
+                <div class="modal-info">
+                    <h4>What happens next?</h4>
+                    <ol>
+                        <li>Your organization will be created with a unique organization code</li>
+                        <li>You'll be automatically added as a Manager</li>
+                        <li>Share the organization code with team members to invite them</li>
+                        <li>Members can join using the "Join Organization" feature</li>
+                    </ol>
+                    
+                    <div class="info-note">
+                        <strong>Tip:</strong> Choose a clear name that team members will easily recognize and understand.
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Create Organization</button>
+                    <button type="button" class="btn btn-secondary modal-cancel create-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Join Modal Elements
+    const joinModal = document.getElementById('joinModal');
+    const openJoinModalBtn = document.getElementById('openJoinModal');
+    const openJoinModalEmptyBtn = document.getElementById('openJoinModalEmpty');
+    const joinCloseBtn = document.querySelector('.close');
+    const joinCancelBtn = document.querySelector('.modal-cancel');
+    const orgCodeInput = document.getElementById('org_code');
+
+    // Create Modal Elements
+    const createModal = document.getElementById('createModal');
+    const openCreateModalBtn = document.getElementById('openCreateModal');
+    const openCreateModalEmptyBtn = document.getElementById('openCreateModalEmpty');
+    const createCloseBtn = document.querySelector('.create-close');
+    const createCancelBtn = document.querySelector('.create-cancel');
+    const orgNameInput = document.getElementById('org_name');
+
+    // Function to open join modal
+    function openJoinModal() {
+        joinModal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => orgCodeInput.focus(), 100);
+    }
+
+    // Function to close join modal
+    function closeJoinModal() {
+        joinModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        orgCodeInput.value = '';
+    }
+
+    // Function to open create modal
+    function openCreateModal() {
+        createModal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => orgNameInput.focus(), 100);
+    }
+
+    // Function to close create modal
+    function closeCreateModal() {
+        createModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        orgNameInput.value = '';
+        document.getElementById('description').value = '';
+    }
+
+    // Join Modal Event listeners
+    if (openJoinModalBtn) {
+        openJoinModalBtn.addEventListener('click', openJoinModal);
+    }
+    
+    if (openJoinModalEmptyBtn) {
+        openJoinModalEmptyBtn.addEventListener('click', openJoinModal);
+    }
+
+    if (joinCloseBtn) {
+        joinCloseBtn.addEventListener('click', closeJoinModal);
+    }
+
+    if (joinCancelBtn) {
+        joinCancelBtn.addEventListener('click', closeJoinModal);
+    }
+
+    // Create Modal Event listeners
+    if (openCreateModalBtn) {
+        openCreateModalBtn.addEventListener('click', openCreateModal);
+    }
+    
+    if (openCreateModalEmptyBtn) {
+        openCreateModalEmptyBtn.addEventListener('click', openCreateModal);
+    }
+
+    if (createCloseBtn) {
+        createCloseBtn.addEventListener('click', closeCreateModal);
+    }
+
+    if (createCancelBtn) {
+        createCancelBtn.addEventListener('click', closeCreateModal);
+    }
+
+    // Close modals when clicking outside of them
+    window.addEventListener('click', function(event) {
+        if (event.target === joinModal) {
+            closeJoinModal();
+        }
+        if (event.target === createModal) {
+            closeCreateModal();
+        }
+    });
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            if (joinModal.style.display === 'block') {
+                closeJoinModal();
+            }
+            if (createModal.style.display === 'block') {
+                closeCreateModal();
+            }
+        }
+    });
+
+    // Handle join form submission
+    const joinForm = document.getElementById('joinOrgForm');
+    if (joinForm) {
+        joinForm.addEventListener('submit', function(event) {
+            const orgCode = orgCodeInput.value.trim();
+            if (!orgCode) {
+                event.preventDefault();
+                alert('Please enter an organization code.');
+                orgCodeInput.focus();
+            }
+        });
+    }
+
+    // Handle create form submission
+    const createForm = document.getElementById('createOrgForm');
+    if (createForm) {
+        createForm.addEventListener('submit', function(event) {
+            const orgName = orgNameInput.value.trim();
+            if (!orgName) {
+                event.preventDefault();
+                alert('Please enter an organization name.');
+                orgNameInput.focus();
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}

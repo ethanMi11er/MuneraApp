@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Task - Munera{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">Munera</div>
+    <nav class="sidebar__nav">
+      <a class="nav__item" href="{% url 'home' %}">Dashboard</a>
+      <a class="nav__item" href="{% url 'my_organizations' %}">Organizations</a>
+      <a class="nav__item" href="{% url 'projects:my-projects' %}">Projects</a>
+      <a class="nav__item nav__item--active" href="{% url 'projects:tasks' %}">My Tasks</a>
+      <a class="nav__item" href="{% url 'profile' %}">Profile</a>
+      <div class="nav__spacer"></div>
+      <a class="nav__item nav__item--danger" href="{% url 'logout' %}">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="page-header">
+        <h1>Add New Task</h1>
+        <p class="subtitle">Create a new actionable task for your project.</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel__header flex-between">
+            <span>Task Details</span>
+            <a href="{% url 'projects:tasks' %}" class="btn btn-secondary btn-inline">Back to tasks</a>
+        </div>
+        <div class="panel__body">
+            <form method="post" class="form">
+                {% csrf_token %}
+
+                <div class="form-grid">
+                    {{ form.as_p }}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                    <a href="{% url 'projects:tasks' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
