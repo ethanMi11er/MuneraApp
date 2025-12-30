@@ -23,11 +23,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-orr7b8xp(*t9@eq*a8a5^&92u--z9mz6@b7*@u&_^e4*xs$!a('
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['emoney.pythonanywhere.com']
-
+if 'PYTHONANYWHERE_DOMAIN' in os.environ:
+    print("--- MODE: PRODUCTION (PythonAnywhere) ---")
+    DEBUG = False
+    ALLOWED_HOSTS = ['emoney.pythonanywhere.com']
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'emoney$default',
+            'USER': 'emoney',
+            'PASSWORD': '4Ckwjfgd!!', 
+            'HOST': 'emoney.mysql.pythonanywhere-services.com',
+        }
+    }
+else:
+    print("--- MODE: DEVELOPMENT (Local) ---")
+    DEBUG = True
+    ALLOWED_HOSTS = ['*']
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Application definition
 
@@ -73,18 +91,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'munera.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'emoney$default',
-        'USER': 'emoney',
-        'PASSWORD': '4Ckwjfgd!!',
-        'HOST': 'emoney.mysql.pythonanywhere-services.com',
-    }
-}
 
 
 # Password validation
@@ -125,10 +131,10 @@ STATIC_URL = 'static/'
 
 # Add this line to tell Django where your top-level static folder is
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    BASE_DIR / 'static',    
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
